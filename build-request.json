@@ -1,36 +1,38 @@
 {
   "kind": "build_request",
-  "title": "Fix dashboard not refreshing after incidents are added",
+  "title": "Fix stopped backend canister causing IC0508 rejection errors",
+  "projectName": "District IT Status Page",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-6",
-      "text": "Fix the public-facing Dashboard so that it correctly reflects the current state of incidents after they are created or updated via the admin panel. The dashboard must not show a 'no incidents' or stale state when incidents exist in the backend. Ensure the React Query cache for getAllIncidents is properly invalidated or refetched after mutations, and that the dashboard always displays the latest data on load and after polling.",
-      "target": "frontend",
+      "id": "REQ-18",
+      "text": "Redeploy the backend Motoko canister so it transitions from a stopped state to a running state. The canister tgggy-siaaa-aaaag-auegq-cai is currently stopped (IC0508 / Reject code 5), causing all calls including getAllIncidents to be rejected. The canister must be fully redeployed and running so that both query and update calls are accepted without error.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-1"
         ],
         "quotes": [
-          "the dashboard seems to be broken. It keeps saying there is are incidents being reported even after I added one."
+          "Canister tgggy-siaaa-aaaag-auegq-cai is stopped and therefore does not have a CallContextManager Error code: IC0508",
+          "Reject code: 5 Reject text: Canister tgggy-siaaa-aaaag-auegq-cai is stopped"
         ]
       },
       "acceptanceCriteria": [
-        "After creating an incident in the admin panel, the public dashboard reflects the new incident without requiring a manual page reload.",
-        "The dashboard does not display a 'no incidents' or empty state when one or more incidents exist in the backend.",
-        "The getAllIncidents React Query hook fetches fresh data on mount and invalidates correctly after any create/update/status-change mutation.",
-        "Active incidents appear in the active section and resolved incidents appear in the resolved section with correct grouping."
+        "The backend canister is in a running state after deployment.",
+        "Calls to getAllIncidents return incident data without a Reject code 5 / IC0508 error.",
+        "The Dashboard and Admin Panel load incidents successfully without any 'canister is stopped' rejection errors.",
+        "Both query and update calls (createIncident, addUpdate, changeStatus, deleteIncident) are accepted by the canister."
       ]
     }
   ],
   "constraints": [
-    "Do not modify frontend/src/hooks/useActor.ts or frontend/src/hooks/useInternetIdentity.ts.",
-    "Do not change the backend data model or Motoko actor logic unless a backend bug is identified as the root cause."
+    "Do not change the existing backend data model or Motoko actor logic.",
+    "Do not modify any frontend immutable paths."
   ],
   "nonGoals": [
-    "Adding new incident fields or changing the data model.",
-    "Changing the visual theme or layout of the dashboard.",
-    "Adding real-time WebSocket updates."
+    "Changing the frontend actor initialization or query wiring.",
+    "Adding new backend methods or modifying existing ones.",
+    "UI or theme changes."
   ],
   "imageRequirements": {
     "required": [],

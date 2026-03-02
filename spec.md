@@ -1,12 +1,10 @@
 # Specification
 
 ## Summary
-**Goal:** Fix the public-facing dashboard so it correctly displays the current state of incidents after they are created or updated via the admin panel.
+**Goal:** Redeploy the stopped backend Motoko canister so it returns to a running state and all calls are accepted without IC0508/Reject code 5 errors.
 
 **Planned changes:**
-- Ensure the `getAllIncidents` React Query hook fetches fresh data on component mount.
-- Invalidate or refetch the `getAllIncidents` query cache after any create, update, or status-change mutation in the admin panel.
-- Fix the dashboard so it does not display a "no incidents" or empty state when incidents exist in the backend.
-- Ensure active incidents appear in the active section and resolved incidents appear in the resolved section with correct grouping.
+- Redeploy the backend Motoko canister (tgggy-siaaa-aaaag-auegq-cai) to transition it from stopped to running state
+- Ensure query calls (e.g., `getAllIncidents`) and update calls (`createIncident`, `addUpdate`, `changeStatus`, `deleteIncident`) are accepted without rejection
 
-**User-visible outcome:** After adding or updating an incident in the admin panel, the public dashboard automatically reflects the latest incident data without requiring a manual page reload.
+**User-visible outcome:** The Dashboard and Admin Panel load incidents successfully, with no "canister is stopped" errors appearing.

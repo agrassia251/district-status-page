@@ -1,24 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import { type IncidentDTO, type Severity } from '../backend';
-
-export const INCIDENTS_QUERY_KEY = ['incidents'];
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useActor } from "./useActor";
+import type { IncidentDTO, Severity } from "../backend";
 
 export function useGetAllIncidents() {
   const { actor, isFetching } = useActor();
 
   return useQuery<IncidentDTO[]>({
-    queryKey: INCIDENTS_QUERY_KEY,
+    queryKey: ["incidents"],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) {
+        throw new Error("Actor not initialized yet");
+      }
       const result = await actor.getAllIncidents();
-      // Sort by updatedAt descending
-      return [...result].sort((a, b) => Number(b.updatedAt - a.updatedAt));
+      return result;
     },
     enabled: !!actor && !isFetching,
-    refetchInterval: 30_000,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    staleTime: 10_000,
+    retry: 2,
   });
 }
 
@@ -26,22 +24,14 @@ export function useGetIncident(incidentId: string) {
   const { actor, isFetching } = useActor();
 
   return useQuery<IncidentDTO | null>({
-    queryKey: ['incident', incidentId],
+    queryKey: ["incident", incidentId],
     queryFn: async () => {
-      if (!actor || !incidentId) return null;
+      if (!actor) throw new Error("Actor not initialized yet");
       return actor.getIncident(incidentId);
     },
     enabled: !!actor && !isFetching && !!incidentId,
+    staleTime: 10_000,
   });
-}
-
-export function useIsIdAlreadyUsed() {
-  const { actor } = useActor();
-
-  return async (id: string): Promise<boolean> => {
-    if (!actor) return false;
-    return actor.isIdAlreadyUsed(id);
-  };
 }
 
 export function useCreateIncident() {
@@ -62,11 +52,11 @@ export function useCreateIncident() {
       affectedService: string;
       severity: Severity;
     }) => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       return actor.createIncident(id, title, description, affectedService, severity);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INCIDENTS_QUERY_KEY, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
     },
   });
 }
@@ -91,11 +81,11 @@ export function useAddUpdate() {
       severity: Severity;
       message: string;
     }) => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       return actor.addUpdate(incidentId, title, description, affectedService, severity, message);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INCIDENTS_QUERY_KEY, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
     },
   });
 }
@@ -120,11 +110,37 @@ export function useChangeStatus() {
       severity: Severity;
       newStatus: string;
     }) => {
-      if (!actor) throw new Error('Actor not initialized');
+      if (!actor) throw new Error("Actor not initialized");
       return actor.changeStatus(incidentId, title, description, affectedService, severity, newStatus);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: INCIDENTS_QUERY_KEY, refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    },
+  });
+}
+
+export function useDeleteIncident() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.deleteIncident(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    },
+  });
+}
+
+export function useIsIdAlreadyUsed() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!actor) throw new Error("Actor not initialized");
+      return actor.isIdAlreadyUsed(id);
     },
   });
 }
